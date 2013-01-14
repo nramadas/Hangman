@@ -34,7 +34,7 @@ class HumanPlayer < Player
     gets.chomp.downcase[0]
   end
 
-  def check_guess
+  def validate_guess
   end
 
   def choose_secret
@@ -51,12 +51,21 @@ end
 class ComputerPlayer < Player
   def initialize
     super
+    @guessed_letters = []
   end
 
   def guess
-    # guess the letter with the highest frequency
-    # don't guess letters that have already been guessed
-    # narrow dictionary based on correct guesses
+    count = 0
+    freq_letter = ""
+    letters = []
+    @dictionary.each {|word| letters += word.split('')}
+    letters.each do |letter|
+      next if @guessed_letters.include?(letter)
+      if letters.count > count
+        count = letters.count
+        freq_letter = letter
+      end
+    end
   end
 
   def register_guess(guess = {:response => :wrong, :letter => nil, :location => []})
@@ -67,7 +76,12 @@ class ComputerPlayer < Player
     end
   end
 
-  def check_guess
+  def validate_guess(letter)
+    locations = []
+    @secret_guess.each_with_index do |l, i|
+      locations << i if l==letter
+    end
+    locations
   end
 
   def choose_secret
@@ -79,6 +93,7 @@ class ComputerPlayer < Player
   end
 
   def narrow_options(letter, indices)
+    @guessed_letters << letter
     indices.each do |index|
       @dictionary.select! { |word| word[index] == letter }
     end
@@ -87,5 +102,4 @@ class ComputerPlayer < Player
   def exclude_words
     @dictionary.select! { |word| word.length == @secret_length }
   end
-
 end
