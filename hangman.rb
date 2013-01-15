@@ -34,7 +34,16 @@ class HumanPlayer < Player
     gets.chomp.downcase[0]
   end
 
-  def validate_guess
+  def validate_guess(letter)
+    puts "Is #{letter} in your word? (y/n)"
+    answer = gets.chomp.downcase
+    if answer == "y"
+      puts "Where does the letter appear? (seperate locations with comma)"
+      answer = gets.chomp.split(',').map { |location| location.to_i }
+      {:response => :correct, :letter => letter, :location => answer }
+    else
+      {:response => :wrong, :letter => letter, :location => []}
+    end
   end
 
   def choose_secret
@@ -82,7 +91,11 @@ class ComputerPlayer < Player
     @secret_guess.each_with_index do |l, i|
       locations << i if l==letter
     end
-    locations
+    if locations.empty?
+      {:response => :wrong, :letter => letter, :location => []}
+    else
+      {:response => :correct, :letter => letter, :location => locations}
+    end
   end
 
   def choose_secret
