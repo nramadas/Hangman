@@ -11,7 +11,7 @@ class Hangman
 end
 
 class Player
-  attr_accessor :secret_length, :wrong_letters
+  attr_accessor :secret_length, :wrong_letters, :dictionary
 
   def initialize
     @dictionary = load_dictionary
@@ -55,24 +55,25 @@ class ComputerPlayer < Player
   end
 
   def guess
-    count = 0
-    freq_letter = ""
-    letters = []
-    @dictionary.each {|word| letters += word.split('')}
-    letters.each do |letter|
+    highest_frequency = 0
+    most_common_letter = ""
+    ('a'..'z').each do |letter|
       next if @guessed_letters.include?(letter)
-      if letters.count > count
-        count = letters.count
-        freq_letter = letter
+      letter_frequency = @dictionary.join.count(letter)
+      if letter_frequency > highest_frequency
+        most_common_letter = letter 
+        highest_frequency = letter_frequency
       end
     end
+    @guessed_letters << most_common_letter
+    most_common_letter
   end
 
   def register_guess(guess = {:response => :wrong, :letter => nil, :location => []})
     if guess[:response] == :wrong
-      prune_dictionary(guess[:letter])
+      prune_dict_if_wrong(guess[:letter])
     else
-      narrow_options(guess[:letter], guess[:location])
+      prune_dict_if_right(guess[:letter], guess[:location])
     end
   end
 
@@ -88,18 +89,27 @@ class ComputerPlayer < Player
     @dictionary.sample
   end
 
-  def prune_dictionary(letter)
+  def prune_dict_if_wrong(letter)
     @dictionary.select! { |word| !word.include?(letter) }
   end
 
-  def narrow_options(letter, indices)
+  def prune_dict_if_right(letter, indices)
     @guessed_letters << letter
     indices.each do |index|
       @dictionary.select! { |word| word[index] == letter }
     end
   end
 
-  def exclude_words
+  def prune_dict_by_length
     @dictionary.select! { |word| word.length == @secret_length }
   end
 end
+
+# test script
+c = ComputerPlayer.new
+c.secret_length = 5
+c.prune_dict_by_length
+puts c.guess
+puts c.guess
+puts c.guess
+puts c.guess
